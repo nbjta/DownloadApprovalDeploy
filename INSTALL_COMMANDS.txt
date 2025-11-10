@@ -1,0 +1,89 @@
+===========================================
+INSTALLATION KOMMANDOER FOR DOWNLOAD WATCHER SERVICE
+===========================================
+
+KRÆVER: Administrator PowerShell (Højreklik på PowerShell → "Run as administrator")
+
+===========================================
+TRIN 1: AFINSTALLER SERVICEN
+===========================================
+
+cd "C:\Users\HKIKo\Documents\Natalie\LaptopSetup\NataliesDownloadApproval"
+powershell -ExecutionPolicy Bypass -File .\scripts\uninstall.ps1
+
+ELLER:
+
+Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
+.\scripts\uninstall.ps1
+
+===========================================
+TRIN 2: INSTALLER SERVICEN PÅ NY
+===========================================
+
+cd "C:\Users\HKIKo\Documents\Natalie\LaptopSetup\NataliesDownloadApproval"
+powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1 -StartService
+
+ELLER med specifik admin kode:
+
+powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1 -AdminCode "DinKodeHer" -StartService
+
+ELLER:
+
+Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
+.\scripts\install.ps1 -StartService
+
+INSTALLATION FOR ANDEN BRUGER (f.eks. "Student"):
+
+cd "C:\Users\HKIKo\Documents\Natalie\LaptopSetup\NataliesDownloadApproval"
+powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1 -DownloadsPath "C:\Users\Student.Kode3\Downloads" -StartService
+
+ELLER med specifik admin kode:
+
+powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1 -DownloadsPath "C:\Users\Student.Kode3\Downloads" -AdminCode "DinKodeHer" -StartService
+
+===========================================
+TRIN 3: VERIFICER INSTALLATION
+===========================================
+
+# Tjek om servicen kører
+Get-Service -Name DownloadWatcherService
+
+# Tjek logs
+Get-EventLog -LogName Application -Source "*DownloadWatcher*" -Newest 10 | Format-Table TimeGenerated, EntryType, Message -AutoSize -Wrap
+
+===========================================
+NOTER:
+===========================================
+
+- Prompt installeres automatisk sammen med servicen
+- Prompt ligger i: C:\Program Files\NataliesDownloadApproval\prompt\
+- Service ligger i: C:\Program Files\NataliesDownloadApproval\service\
+- Admin kode gemmes i: C:\Program Files\NataliesDownloadApproval\service\system.cfg (skjult fil)
+- Logs findes i projektmappen: C:\Users\HKIKo\Documents\Natalie\LaptopSetup\NataliesDownloadApproval\logs\
+  - Watcher log: logs\watcher.log
+  - Prompt log: logs\prompt.log
+
+===========================================
+FEJLSØGNING:
+===========================================
+
+Hvis installation fejler:
+1. Tjek at PowerShell kører som administrator
+2. Tjek at .NET 8.0 er installeret
+3. Tjek logs: Get-EventLog -LogName Application -Source "*DownloadWatcher*" -Newest 20
+
+Hvis uninstall fejler:
+1. Stop servicen manuelt: Stop-Service -Name DownloadWatcherService
+2. Slet servicen: sc.exe delete DownloadWatcherService
+3. Genstart computeren hvis filer stadig er låst
+
+===========================================
+NOTER OM FLERE BRUGERE:
+===========================================
+
+- Servicen overvåger kun den Downloads-mappe, der angives ved installation.
+- For flere brugere skal servicen geninstalleres med den ønskede `-DownloadsPath`.
+- Prompt-stien er den samme for alle brugere: C:\Program Files\NataliesDownloadApproval\prompt\
+
+===========================================
+
