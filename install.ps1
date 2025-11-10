@@ -33,11 +33,29 @@ try {
     Write-Warning "Could not ensure permissions on logs directory ${logsDir}: $_"
 }
 
-# Publish projects
-$publishService = Join-Path $env:TEMP "nda_service_$(Get-Date -Format yyyyMMddHHmmss)"
-$publishPrompt = Join-Path $env:TEMP "nda_prompt_$(Get-Date -Format yyyyMMddHHmmss)"
-dotnet publish .\DownloadWatcherService\DownloadWatcherService.csproj -c Release -r win-x64 -o $publishService | Out-Host
-dotnet publish .\DownloadApprovalPrompt\DownloadApprovalPrompt.csproj -c Release -r win-x64 -o $publishPrompt | Out-Host
+# Determine source binaries
+$sourceServiceProj = Join-Path $Root "DownloadWatcherService\DownloadWatcherService.csproj"
+$sourcePromptProj = Join-Path $Root "DownloadApprovalPrompt\DownloadApprovalPrompt.csproj"
+$usePublishedBinaries = (Test-Path $sourceServiceProj -PathType Leaf) -and (Test-Path $sourcePromptProj -PathType Leaf)
+
+if ($usePublishedBinaries)
+{
+    Write-Host "Building service and prompt from source projects..." -ForegroundColor Cyan
+    $publishService = Join-Path $env:TEMP "nda_service_$(Get-Date -Format yyyyMMddHHmmss)"
+    $publishPrompt = Join-Path $env:TEMP "nda_prompt_$(Get-Date -Format yyyyMMddHHmmss)"
+    dotnet publish $sourceServiceProj -c Release -r win-x64 -o $publishService | Out-Host
+    dotnet publish $sourcePromptProj -c Release -r win-x64 -o $publishPrompt | Out-Host
+}
+else
+{
+    $publishService = Join-Path $Root "service"
+    $publishPrompt = Join-Path $Root "prompt"
+    if (-not (Test-Path $publishService -PathType Container) -or -not (Test-Path $publishPrompt -PathType Container))
+    {
+        Write-Error "Cannot locate pre-built binaries. Expected 'service' and 'prompt' folders alongside install.ps1"; exit 1
+    }
+    Write-Host "Using pre-built binaries from local 'service' and 'prompt' folders." -ForegroundColor Cyan
+}
 
 # Create install folders
 $serviceDir = Join-Path $InstallDir "service"
@@ -195,7 +213,7 @@ if ($LASTEXITCODE -eq 0) {
     Write-Error "Failed to update service configuration: $configResult"; exit 1
   }
   # Always update description and display name with version
-  $version = "1.1.11"
+  $version = "1.1.12"
   $description = "Watcher that opens approval prompt for new downloads (v$version)"
   $displayName = "Download Watcher Service (v$version)"
   sc.exe description $ServiceName $description | Out-Null
@@ -209,7 +227,7 @@ if ($LASTEXITCODE -eq 0) {
   if ($LASTEXITCODE -ne 0) {
     Write-Error "Failed to create service: $createResult"; exit 1
   }
-  $version = "1.1.11"
+  $version = "1.1.12"
   $description = "Watcher that opens approval prompt for new downloads (v$version)"
   $displayName = "Download Watcher Service (v$version)"
   sc.exe description $ServiceName $description | Out-Null
