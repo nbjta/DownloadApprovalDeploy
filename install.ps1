@@ -15,7 +15,11 @@ If (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
     Write-Error "Please run this script in an elevated PowerShell (Run as administrator)."; exit 1
 }
 
+$ScriptDir = $PSScriptRoot
 $Root = Split-Path -Parent $PSScriptRoot
+if (-not (Test-Path (Join-Path $Root "service") -PathType Container) -or -not (Test-Path (Join-Path $Root "prompt") -PathType Container)) {
+    $Root = $ScriptDir
+}
 Set-Location $Root
 
 # Prepare logs directory in project path
