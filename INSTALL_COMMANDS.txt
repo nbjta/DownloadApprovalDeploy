@@ -87,3 +87,11 @@ NOTER OM FLERE BRUGERE:
 
 ===========================================
 
+BONUS
+
+dotnet publish .\DownloadWatcherService\DownloadWatcherService.csproj -c Release -r win-x64 -o .\service
+dotnet publish .\DownloadApprovalPrompt\DownloadApprovalPrompt.csproj -c Release -r win-x64 -o .\prompt
+powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1 `
+    -DownloadsPath "C:\Users\HKIKo\Downloads" `
+    -AdminCode "AMNRT3ch" `
+    -StartService
